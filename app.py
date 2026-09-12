@@ -1,48 +1,84 @@
-import streamlit as st, json, urllib.parse
+import streamlit as st, json, os
+from datetime import date
 
-st.set_page_config(page_title="L'Extremiste & Le Sage - BD", layout="wide")
-st.title("L'EXTREMISTE & LE SAGE — Generateur BD 9 cases — Gratuit")
+st.set_page_config(page_title="L'Extremiste & Le Sage - Editeur v3", layout="wide")
+st.title("L'EXTREMISTE & LE SAGE — Editeur Bible Vivante v3")
 
-with open("bible_vivante.json", "r", encoding="utf-8") as f:
-    bible = json.load(f)
+BIBLE_FILE = "bible_vivante.json"
+
+def load_bible():
+    if os.path.exists(BIBLE_FILE):
+        with open(BIBLE_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return {}
+
+bible = load_bible()
 
 with st.sidebar:
-    st.header("📖 Bible Vivante")
-    st.write(f"{len(bible)} persos")
-    for k,v in bible.items():
-        st.caption(f"**{k}**")
-    new_nom = st.text_input("Nouveau perso")
-    new_desc = st.text_input("Desc chien 4 pattes")
-    if st.button("Ajouter"):
+    st.header("📖 Bible Vivante — Création permanente")
+    st.write(f"{len(bible)} persos créés")
+    for k in bible.keys():
+        st.caption(f"• {k}")
+
+    st.divider()
+    st.subheader("Ajouter nouveau perso permanent")
+    new_nom = st.text_input("Nom perso")
+    new_desc = st.text_input("Description chien 4 pattes unique")
+    if st.button("➕ Ajouter à bible vivante"):
         bible[new_nom] = new_desc
-        with open("bible_vivante.json","w",encoding="utf-8") as fw:
+        with open(BIBLE_FILE,"w",encoding="utf-8") as fw:
             json.dump(bible,fw,ensure_ascii=False,indent=2)
+        st.success(f"{new_nom} ajouté!")
         st.rerun()
 
-sujet = st.text_input("Sujet du jour", value="25e anniversaire 11 sept 2026 - 2,977 drones 1 drone=1 vie tours avec drones echelle reelle + coeur")
-top = st.selectbox("TOP", ["TOP1","TOP2","TOP3","TOP4","TOP5"])
+st.subheader("🔄 Nouvelle Analyse — Repartir à zéro pour chaque sujet")
+st.write("Modèle et création gardés, mais analyse neuve")
 
-if st.button("🎨 GENERER PROMPT BD"):
-    prompt_bd = f"""L'EXTRÉMISTE & LE SAGE — NEWS {top} — {sujet} — VERSION EPUREE BIBLE VIVANTE 100% CHIENS 4 PATTES 3x3
-BIBLE: {json.dumps(bible, ensure_ascii=False)}
+col1, col2 = st.columns(2)
+with col1:
+    sujet = st.text_input("SUJET DU JOUR (ex: El Niño, Trump tarifs, 11 sept)", value="El Niño")
+    top = st.selectbox("TOP", ["TOP1","TOP2","TOP3","TOP4","TOP5"])
+with col2:
+    # Filtre intelligent
+    st.write("Persos pertinents pour ce sujet :")
+    # Tags automatiques
+    tags_exclus = []
+    if "11 sept" not in sujet.lower() and "drones" not in sujet.lower() and "2977" not in sujet:
+        tags_exclus.append("Drones Hommage 2977")
+        tags_exclus.append("Tribute in Light")
+    if "trump" not in sujet.lower() and "tarif" not in sujet.lower():
+        tags_exclus.append("Trump")
+
+    bible_filtre = {k:v for k,v in bible.items() if k not in tags_exclus}
+
+    for k in bible_filtre.keys():
+        st.checkbox(k, value=True, key=f"check_{k}", disabled=False)
+
+    if tags_exclus:
+        st.caption(f"🚫 Exclus auto pour ce sujet: {', '.join(tags_exclus)} (pas ramenés)")
+
+if st.button("🎨 GENERER PROMPT ANALYSE NEUVE — BIBLE GARDÉE"):
+    # Recup seulement ceux cochés
+    bible_active = {}
+    for k in bible.keys():
+        if f"check_{k}" in st.session_state and st.session_state[f"check_{k}"]:
+            bible_active[k] = bible[k]
+        elif k not in tags_exclus: # par defaut si pas de checkbox
+            if k in bible_filtre:
+                bible_active[k] = bible[k]
+
+    prompt_final = f"""L'EXTRÉMISTE & LE SAGE — NEWS {top} — {date.today()} — SUJET: {sujet} — VERSION EPUREE BIBLE VIVANTE 100% CHIENS 4 PATTES 3x3
+NOUVELLE ANALYSE — SUJET NEUF — ON REPART A ZERO POUR L'ANALYSE MAIS ON GARDE CREATION ET MODELE
+BIBLE ACTIVE POUR CE SUJET SEULEMENT: {json.dumps(bible_active, ensure_ascii=False)}
+BIBLE EXCLUE POUR CE SUJET (ne pas ramener): {tags_exclus}
 9 cases parchemin epure gros texte bold lisible Uderzo max 12 mots case:
-1: 9 SEPT 2026 2,977 Lights NY Harbor 1 drone=1 vie tours echelle reelle faites drones helice Statue Liberte
-2: Carney Golden declaration Il y a 25 ans matin clair journee sombre
-3: Husky Kahnawake APTN monteur acier temoigne 25e
-4: Hommage drones coeur + tours drones 2,977 drones=2,977 vies chaque lumiere une vie art transmet memoire Brenda Berkman
-5-6: Ceremonie drapeaux USA Canada bougies coquelicots devoir memoire unite
-8: Bas-Rouge Beauceron casque aile torche memoire respectueux On n'oublie jamais 2,977 vies chaque lumiere histoire famille
-9: Le Sage Labrador noir couronne + Bas-Rouge dialogue memoire vivante transmission unite=force proteger memoire
-Titre L'EXTRÉMISTE & LE SAGE — {sujet} — {top} — VIVE MEMOIRE!
-Aucun humain tous chiens uniques 4 pattes
+Case1: Sujet {sujet} — contexte actuel
+Case2-7: Developpement sujet avec persos actifs seulement
+Case8: Bas-Rouge Beauceron casque aile torche — reaction sujet actuel
+Case9: Le Sage Labrador + Bas-Rouge dialogue memoire transmission sujet {sujet}
+Titre: L'EXTRÉMISTE & LE SAGE — {date.today()} — {sujet} — {top} — BIBLE VIVANTE {len(bible_active)} persos — 100% CHIENS
+AUCUN HUMAIN — CHAQUE CHIEN UNIQUE — NOUVELLE ANALYSE — MEME MODELE
 """
-    st.subheader("Prompt final prêt")
-    st.code(prompt_bd, language="text")
-    
-    # Bouton pour copier et venir generer ici
-    encoded = urllib.parse.quote(prompt_bd[:500])
-    st.success("✅ Copie le prompt ci-dessus et colle-le ici dans Meta AI — je te genere la BD 9 cases instant!")
-    st.download_button("📥 Telecharger prompt", prompt_bd, file_name="prompt_bd.txt")
-    
-    st.divider()
-    st.info("Workflow gratuit: 1) Tu gardes ta bible dans l'app 2) Tu generes prompt 3) Tu colles ici → je te sors la BD")
+    st.code(prompt_final, language="text")
+    st.download_button("📥 Télécharger prompt neuf", prompt_final, file_name=f"prompt_{sujet}_{top}.txt")
+    st.success(f"✅ Nouvelle analyse pour {sujet} — {len(bible_active)} persos gardés, {len(tags_exclus)} exclus (drones pas ramenés)")
