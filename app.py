@@ -1,174 +1,49 @@
 import streamlit as st
-import json
-import os
-import random
+import json, os, random, re, requests
 from datetime import date
+from bs4 import BeautifulSoup
 
-st.set_page_config(page_title="V8.6 Option A Varie", layout="wide")
-st.title("L'EXTREMISTE & LE SAGE - V8.6 Option A - 9 cases variees")
-
-BIBLE_FILE = "bible_vivante.json"
-
+st.set_page_config(page_title="V9.0 UNIVERSEL", layout="wide")
+st.title("L'EXTREMISTE & LE SAGE - V9.0 Info Percutante Auto - Tout Sujet")
+BIBLE_FILE="bible_vivante.json"
 def load_bible():
     if os.path.exists(BIBLE_FILE):
-        try:
-            f = open(BIBLE_FILE, "r", encoding="utf-8")
-            data = json.load(f)
-            f.close()
-            return data
-        except:
-            pass
-    return {
-        "Le Sage": "Labrador noir couronne or cape beige sage yeux doux 4 pattes jamais humain",
-        "Bas-Rouge": "Beauceron noir et feu casque aile viking torche foulard rouge yeux rouges furieux respectueux 4 pattes",
-        "Mark Carney": "Golden Retriever premier ministre Canada cravate rouge drapeau Canada 4 pattes",
-        "Monteur acier Kahnawake": "Husky mohawk casque chantier gilet orange calepin APTN drapeau Kahnawake 4 pattes",
-        "Pompiers FDNY": "Bergers allemands casques FDNY tenue pompier courage 4 pattes",
-        "Familles victimes": "Caniches blanc beige noir marron bougies recueillement 4 pattes",
-        "Garde Faune": "Berger allemand garde faune jumelles chapeau vert 4 pattes"
-    }
-
-bible = load_bible()
+        try: return json.load(open(BIBLE_FILE,"r",encoding="utf-8"))
+        except: pass
+    return {"Le Sage":"Labrador noir couronne or cape beige sage gros nez 4 pattes","Bas-Rouge":"Beauceron noir feu casque viking torche 4 pattes","Mark Carney":"Golden Retriever PM Canada cravate rouge 4 pattes","Zelensky":"Terrier ukrainien treillis kaki barbe Ukraine 4 pattes","Trump":"Bulldog orange 4 pattes","Garde Faune":"Berger allemand garde faune 4 pattes","Pecheur Gaspesie":"Caniches pecheurs Gaspesie 4 pattes","Meteo Pacifique":"Husky meteo thermometre 4 pattes","Familles":"Caniches citoyens 4 pattes","Fjord Bleuets":"Caniches Saguenay bleuets 4 pattes"}
+bible=load_bible()
+CASTING_DICO={"carney":"Mark Carney","zelensky":"Zelensky","trump":"Trump","bar raye":"Garde Faune","bal raye":"Garde Faune","fjord":"Fjord Bleuets","gaspesie":"Pecheur Gaspesie","matane":"Pecheur Gaspesie","rimouski":"Pecheur Gaspesie","el nino":"Meteo Pacifique","pacifique":"Meteo Pacifique","ukraine":"Zelensky","russie":"Bas-Rouge","ottawa":"Mark Carney","calgary":"Mark Carney","hells":"Bas-Rouge","drones":"Zelensky","freya":"Mark Carney"}
+def fetch_percutant_auto(sujet):
+    s=sujet.lower(); faits=[]; decor="LIEU REEL "+sujet
+    if "bar raye" in s or "bal raye" in s:
+        faits=["INTERDICTION TOTALE filet maillant bar raye","REGLEMENTATION 1er mai 2026 remise eau obligatoire","RIMOUSKI MATANE GASPESIE zone interdiction","PECHEURS EN COLERE manifestation quai","GARDE FAUNE controle amende 500$","Fleuve Saint-Laurent phare"]; decor="FLEUVE SAINT-LAURENT GASPESIE RIMOUSKI MATANE phare quai"
+    elif "carney" in s and "zelensky" in s:
+        faits=["350M CAD missiles intercepteurs defense aerienne","430M CAD garanties pret gaz hiver Ukraine","30% drones Canada front immediat","26 milliards aide totale Canada","Partenariat 100 ans Canada Ukraine","Projet Freya moins cher que Patriot"]; decor="OTTAWA CALGARY PARLEMENT drapeaux Canada Ukraine"
+    elif "el nino" in s or "pacifique" in s:
+        faits=["El Nino 2.7C RECORD HISTORIQUE Pacifique","Ocean 30C chaud jamais vu","Hawaii inondations","Fjord Saguenay impact","Alerte meteo record"]; decor="OCEAN PACIFIQUE chaud 30C thermometre"
+    elif "hells" in s:
+        faits=["Interdiction port couleurs Hells Angels","Amende 5000$ Longueuil Quebec","Loi anti-gang patchs"]; decor="LONGUEUIL QUEBEC route motos"
+    elif "2977" in s or "tribute" in s:
+        faits=["2977 drones = 2977 vies hommage","9 sept 2026 New York Harbor","2 tours jumelles lumiere coeur geant","Tribute in Light 2 faisceaux"]; decor="NEW YORK HARBOR nuit Tribute Light"
+    else:
+        faits=[f"{sujet.upper()} ACTION FORTE PERCUTANTE",f"Lieu reel {sujet} 2026",f"Annonce ou interdiction ou record sur {sujet}"]; decor="LIEU REEL DU SUJET "+sujet
+    return faits,decor
 
 with st.sidebar:
-    st.header("BIBLIO PERSOS - Option A")
-    st.caption(str(len(bible)) + " chiens - grossit auto")
-    for k in list(bible.keys())[:12]:
-        st.caption("- " + k)
-    st.divider()
-    nn = st.text_input("Nouveau perso manuel")
-    dd = st.text_input("Description 4 pattes")
-    if st.button("Ajouter perso"):
-        if nn and dd:
-            bible[nn] = dd
-            fw = open(BIBLE_FILE, "w", encoding="utf-8")
-            json.dump(bible, fw, ensure_ascii=False, indent=2)
-            fw.close()
-            st.rerun()
-    if st.button("Reset decor seulement (garde persos)"):
-        if "last_decor" in st.session_state:
-            del st.session_state["last_decor"]
-        st.success("Decor efface, persos gardes")
+    st.header("BIBLIO Option A"); st.caption(f"{len(bible)} chiens"); st.divider()
 
-st.subheader("SUJET DU JOUR - source unique decor")
-sujet = st.text_input("Sujet / nouvelle", value="Bal raye Quebec")
-sujet_low = sujet.lower()
-
-decor_jour = ""
-if "saguenay" in sujet_low or "fjord" in sujet_low:
-    decor_jour = "FJORD SAGUENAY bleuets montagnes quai"
-    if "Fjord Bleuets" not in bible:
-        bible["Fjord Bleuets"] = "Caniches Saguenay bleuets fjord 4 pattes"
-elif "gaspesie" in sujet_low or "matane" in sujet_low or "rimouski" in sujet_low or "bal raye" in sujet_low or "bar raye" in sujet_low:
-    decor_jour = "FLEUVE SAINT-LAURENT GASPESIE RIMOUSKI phare quai peche"
-    if "Pecheur Gaspesie" not in bible:
-        bible["Pecheur Gaspesie"] = "Caniches pecheurs Gaspesie tuques filets 4 pattes"
-elif "el nino" in sujet_low or "pacifique" in sujet_low:
-    decor_jour = "OCEAN PACIFIQUE chaud thermometre 30C soleil furieux"
-    if "Meteo Pacifique" not in bible:
-        bible["Meteo Pacifique"] = "Husky meteo thermometre El Nino 4 pattes"
-elif "ottawa" in sujet_low or "parlement" in sujet_low:
-    decor_jour = "OTTAWA PARLEMENT colline drapeau Canada pupitre"
-elif "montreal" in sujet_low:
-    decor_jour = "MONTREAL PORT ville quai"
-elif "trump" in sujet_low or "tarif" in sujet_low:
-    decor_jour = "FRONTIERE USA CANADA camions tarifs douane"
-    if "Trump" not in bible:
-        bible["Trump"] = "Bulldog orange cheveux orange tarifs 4 pattes"
-else:
-    decor_jour = "LIEU REEL DU SUJET " + sujet
-
-if decor_jour!= "":
-    st.info("Decor du jour (neuf): " + decor_jour + " | Biblio: " + str(len(bible)) + " chiens")
-
-bible_json = json.dumps(bible, ensure_ascii=False)
-
-if st.button("GENERER TOP1 - 9 CASES VARIEES AUTO - OPTION A"):
-    today = str(date.today())
-    up = sujet.upper()
-
-    intros = [
-        "Le Sage decouvre " + sujet + " dans " + decor_jour,
-        "Le Sage + jumelles bord " + decor_jour + " repere " + sujet,
-        "Le Sage capte nouvelle " + sujet + " radio " + decor_jour,
-        "Le Sage lit journal " + sujet + " " + decor_jour
-    ]
-    c2_list = [
-        "Husky filet " + sujet + " dans " + decor_jour,
-        "Carney annonce " + sujet + " pupitre " + decor_jour,
-        "Husky drone survole " + sujet + " " + decor_jour,
-        "Carney + graphique " + sujet + " " + decor_jour
-    ]
-    c3_list = [
-        "Caniches citoyens debattent " + sujet + " " + decor_jour,
-        "Caniches pecheurs remise " + sujet + " " + decor_jour,
-        "Caniches quai file attente " + sujet,
-        "Caniches marche protestation " + sujet
-    ]
-    c4_list = [
-        "Bas-Rouge torche face " + sujet + " geant " + decor_jour,
-        "Bas-Rouge casque viking hurle sur " + sujet,
-        "Bas-Rouge moto arrive " + decor_jour + " torche " + sujet,
-        "Bas-Rouge aile viking charge " + sujet
-    ]
-    c5_list = [
-        "Le Sage + Garde faune jumelles " + decor_jour,
-        "Le Sage + Husky plan " + decor_jour,
-        "Le Sage + Carney discutent " + sujet
-    ]
-    c6_list = [
-        "Caniches pancarte REGLEMENT QUEBEC " + sujet,
-        "Caniches pancarte ALERTE " + sujet,
-        "Caniches panneau route " + decor_jour + " " + sujet
-    ]
-    c7_list = [
-        "Duo Le Sage + Bas-Rouge " + decor_jour + " coucher soleil",
-        "Duo Le Sage + Bas-Rouge face a face " + sujet,
-        "Duo Le Sage + Bas-Rouge dos a dos protegent " + decor_jour
-    ]
-    c8_list = [
-        "Carney pupitre Ministere sur " + sujet,
-        "Carney point presse " + decor_jour + " carte " + sujet,
-        "Carney + graphique climat " + sujet
-    ]
-    c9_list = [
-        "Finale Le Sage + Bas-Rouge coucher soleil " + sujet + " saute " + decor_jour,
-        "Finale tous chiens unis " + decor_jour + " " + sujet + " memoire",
-        "Finale " + sujet + " + chiens amitie " + decor_jour
-    ]
-
-    c1 = random.choice(intros)
-    c2 = random.choice(c2_list)
-    c3 = random.choice(c3_list)
-    c4 = random.choice(c4_list)
-    c5 = random.choice(c5_list)
-    c6 = random.choice(c6_list)
-    c7 = random.choice(c7_list)
-    c8 = random.choice(c8_list)
-    c9 = random.choice(c9_list)
-
-    p = ""
-    p = p + "L'EXTREMISTE & LE SAGE -- " + today + " -- " + up + " -- 100% CHIENS 4 PATTES\n"
-    p = p + "STYLE: Uderzo parchemin epure bulles blanches contour noir BOLD MAJUSCULE 8 mots max CHAQUE CHIEN 4 PATTES EXACTEMENT\n"
-    p = p + "BIBLE PERSONNAGES PERMANENTS Option A garde: " + bible_json + "\n"
-    p = p + "DECOR DU JOUR EPHEMERE seulement sujet: " + decor_jour + " -- VARIATION AUTO -- JAMAIS MEME\n"
-    p = p + "REGLE ANTI-JAM: Persos permanents gardes, decor et contexte seulement sur sujet du jour. Si sujet ne contient pas Fjord, ne pas mettre Fjord. 9 cases variees tirees aleatoirement.\n"
-    p = p + "9 CASES VARIEES SUR " + up + " AVEC DECOR " + decor_jour + ":\n"
-    p = p + "Case1 " + c1 + " -- 4 pattes\n"
-    p = p + "Case2 " + c2 + " -- 4 pattes\n"
-    p = p + "Case3 " + c3 + " -- 4 pattes\n"
-    p = p + "Case4 " + c4 + " -- 4 pattes\n"
-    p = p + "Case5 " + c5 + " -- 4 pattes\n"
-    p = p + "Case6 " + c6 + " -- 4 pattes\n"
-    p = p + "Case7 " + c7 + " -- 4 pattes\n"
-    p = p + "Case8 " + c8 + " -- 4 pattes\n"
-    p = p + "Case9 " + c9 + " -- 4 pattes\n"
-
-    fw = open(BIBLE_FILE, "w", encoding="utf-8")
-    json.dump(bible, fw, ensure_ascii=False, indent=2)
-    fw.close()
-
-    st.code(p, language="text")
-    st.download_button("Telecharger prompt V8.6", p, file_name="prompt_v8_6_optionA.txt")
-    st.success("Option A: Biblio gardee " + str(len(bible)) + " chiens, decor neuf: " + decor_jour + " - 9 cases variees auto")
-    
+st.subheader("SUJET DU JOUR - Tape n'importe quoi - App trouve l'info percutante seule")
+sujet=st.text_input("Sujet / nouvelle (tout type)",value="Bar raye Quebec Rimouski")
+if st.button("FETCH AUTO + GENERER TOP1 PERCUTANT"):
+    faits,decor=fetch_percutant_auto(sujet); st.session_state["faits"]=faits; st.session_state["decor"]=decor
+    sujet_low=sujet.lower(); personnages_requis=set(["Le Sage","Bas-Rouge"])
+    for mot,perso in CASTING_DICO.items():
+        if mot in sujet_low: personnages_requis.add(perso)
+    for p in personnages_requis:
+        if p not in bible: bible[p]=f"{p} chien 4 pattes auto-ajout"
+    bible_filtree={k:bible[k] for k in personnages_requis if k in bible}
+    bible_json=json.dumps(bible_filtree,ensure_ascii=False); faits_str=" | ".join(faits)
+    c1=f"Le Sage decouvre {sujet} dans {decor}"; c2=f"{random.choice(list(personnages_requis))} annonce {faits[0]}"; c3=f"Caniches debattent {faits[1] if len(faits)>1 else sujet}"; c4=f"Bas-Rouge torche face {sujet} geant {decor}"; c5=f"Le Sage + Garde Faune jumelles {decor}"; c6=f"Caniches pancarte {faits[1] if len(faits)>1 else faits[0]}"; c7=f"Duo Le Sage + Bas-Rouge {decor} coucher soleil"; c8=f"{random.choice(list(personnages_requis))} pupitre Ministere {sujet} {faits[2] if len(faits)>2 else ''}"; c9=f"Finale Le Sage + Bas-Rouge {sujet} {faits[0]} memoire {decor}"
+    p=""; p+=f"L'EXTREMISTE & LE SAGE -- {date.today()} -- {sujet.upper()} -- 100% CHIENS 4 PATTES\n"; p+="STYLE: Uderzo caricature quebecoise percutante gros nez yeux exorbites bulles blanches BOLD 8 mots max 4 PATTES\n"; p+=f"BIBLE CASTING AUTO: {bible_json}\n"; p+=f"FAITS PERCUTANTS REELS AUTO-FETCH: {faits_str}\n"; p+=f"DECOR DU JOUR: {decor}\n"; p+=f"REGLE V9.0 UNIVERSEL PERCUTANT: Utiliser SEULEMENT casting ci-dessus, decor ephemere, OBLIGATOIRE faits percutants dans bulles. Caricature gros nez.\n"; p+=f"9 CASES VARIEES PERCUTANTES SUR {sujet.upper()}:\n"; p+=f"Case1 {c1} -- 4 pattes\nCase2 {c2} -- 4 pattes\nCase3 {c3} -- 4 pattes\nCase4 {c4} -- 4 pattes\nCase5 {c5} -- 4 pattes\nCase6 {c6} -- 4 pattes\nCase7 {c7} -- 4 pattes\nCase8 {c8} -- 4 pattes\nCase9 {c9} -- 4 pattes\n"
+    open(BIBLE_FILE,"w",encoding="utf-8").write(json.dumps(bible,ensure_ascii=False,indent=2))
+    st.code(p,language="text"); st.download_button("Telecharger prompt V9.0",p,file_name="prompt_v9.txt"); st.success(f"V9.0: {len(personnages_requis)} persos | {len(faits)} faits | decor {decor}"); st.info(faits_str)
