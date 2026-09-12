@@ -1,117 +1,46 @@
-import streamlit as st, json, os, requests
-from datetime import date
+prompt_final = f"""L'EXTRÉMISTE & LE SAGE — NEWS {top} — {date.today()} — SUJET: {sujet.upper()} — VERSION EPUREE BIBLE VIVANTE 100% CHIENS 4 PATTES 3x3 — BULLES COURTES PUNCHÉ UDERZO MAX 8 MOTS — INTERACTION SAGE + EXTREMISTE AVEC NOUVELLE
 
-st.set_page_config(page_title="L'Extremiste & Le Sage - V6 Recherche", layout="wide")
-st.title("L'EXTREMISTE & LE SAGE — V6 Recherche Auto + Manuelle")
+=== STYLE SACRÉ INTACT (NE JAMAIS PERDRE) ===
+Uderzo Astérix — parchemin épuré couleurs vives — bulles blanches contour noir — texte BOLD MAJUSCULE lisible max 8 mots par bulle — chiens très expressifs gros nez — 100% chiens 4 pattes aucun humain — AUCUN DRONE si sujet != 11 sept — humour léger punché — respectueux hommage
 
-BIBLE_FILE = "bible_vivante.json"
-def load_bible():
-    if os.path.exists(BIBLE_FILE):
-        with open(BIBLE_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    return {}
-bible = load_bible()
+=== NOUVELLE RÈGLE D'OR — INTERACTION AVEC SUJET ===
+Le but = CARICATURER la nouvelle "{sujet}", pas illustrer générique.
+Le Sage (Labrador couronne cape sage) et Bas-Rouge (Beauceron casque viking torche foulard rouge furieux respectueux) doivent INTERAGIR directement avec le sujet dans au moins 4 cases sur 9. Ils ne sont plus seulement case 9.
 
-# SIDEBAR BIBLE
-with st.sidebar:
-    st.header("📖 Bible Vivante")
-    st.write(f"{len(bible)} persos")
-    for k in bible.keys():
-        st.caption(f"• {k}")
-    st.divider()
-    new_nom = st.text_input("Nouveau perso")
-    new_desc = st.text_input("Desc chien 4 pattes")
-    if st.button("Ajouter"):
-        bible[new_nom]=new_desc
-        with open(BIBLE_FILE,"w",encoding="utf-8") as fw:
-            json.dump(bible,fw,ensure_ascii=False,indent=2)
-        st.rerun()
-
-# NOUVEAU: SYSTEME RECHERCHE
-st.subheader("🔍 Système de recherche sujet")
-mode = st.radio("Mode:", ["🔎 Recherche manuelle (tape sujet)", "🤖 Recherche auto news du jour"], horizontal=True)
-
-sujet_final = ""
-top = "TOP1"
-
-if mode == "🔎 Recherche manuelle (tape sujet)":
-    sujet_final = st.text_input("Sujet du jour", value="Sépaq gratuite")
-    
-else:
-    st.write("🤖 Recherche automatique — 12 sept 2026")
-    if st.button("🚀 Lancer recherche auto Québec/Canada"):
-        with st.spinner("Recherche en cours..."):
-            # Simulation recherche auto — remplace par vrai RSS plus tard
-            news_auto = [
-                {"titre": "Sépaq gratuite aujourd'hui 15e Journée parcs", "sujet": "Sépaq gratuite 2026", "source": "Espaces.ca"},
-                {"titre": "Québec baisse immigration à 45k - Roberge", "sujet": "Immigration Québec 45k", "source": "Assemblée Nationale"},
-                {"titre": "Rassemblement 13h30 devant parlement Québec C'EST NOUS", "sujet": "Rassemblement Québec 13h30", "source": "YouTube"},
-                {"titre": "Loi anti-patchs 5000$ Longueuil Ian Lafreniere", "sujet": "Loi patchs 5000$ Longueuil", "source": "Québec.ca"},
-                {"titre": "El Niño / Sécheresse 2026 alerte chaleur 40°C", "sujet": "Sécheresse 40°C Québec", "source": "Météo"}
-            ]
-            st.session_state["news_auto"] = news_auto
-    
-    if "news_auto" in st.session_state:
-        st.write("### 📰 Résultats auto — Clique pour sélectionner:")
-        for i, n in enumerate(st.session_state["news_auto"]):
-            col1, col2 = st.columns([3,1])
-            with col1:
-                st.write(f"**{i+1}. {n['titre']}** — _{n['source']}_")
-            with col2:
-                if st.button(f"Choisir", key=f"choose_{i}"):
-                    st.session_state["sujet_choisi"] = n["sujet"]
-        
-        if "sujet_choisi" in st.session_state:
-            sujet_final = st.session_state["sujet_choisi"]
-            st.success(f"✅ Sujet choisi: **{sujet_final}**")
-            # Option éditer
-            sujet_final = st.text_input("Modifier si besoin:", value=sujet_final)
-
-# GENERATION PROMPT (même logique qu'avant)
-if sujet_final:
-    tags_exclus=[]
-    if "11 sept" not in sujet_final.lower() and "drone" not in sujet_final.lower():
-        tags_exclus.extend(["Drones Hommage 2977","Tribute in Light"])
-    if "trump" not in sujet_final.lower():
-        tags_exclus.append("Trump")
-    bible_filtre={k:v for k,v in bible.items() if k not in tags_exclus}
-
-    if st.button(f"🎨 GENERER {top} — {sujet_final} — BULLES PUNCHÉ"):
-        prompt_final = f"""L'EXTRÉMISTE & LE SAGE — NEWS {top} — {date.today()} — SUJET: {sujet_final} — VERSION EPUREE BIBLE VIVANTE 100% CHIENS 4 PATTES 3x3 — BULLES COURTES PUNCHÉ UDERZO MAX 8 MOTS
-STYLE: Uderzo — BULLES MAX 8 MOTS — BOLD LISIBLE — GROS NEZ EXPRESSIF
-BIBLE ACTIVE: {json.dumps(bible_filtre, ensure_ascii=False)}
+=== BIBLE VIVANTE FILTRÉE À TRANSFORMER ===
+{bible_filtre_json}
 EXCLUE: {tags_exclus}
-AUCUN DRONE SI SUJET != 11 SEPT
 
-9 CASES BULLES PUNCHÉES:
-Case1: Contexte {sujet_final} vue large
-BULLE NARRATEUR: "2026. {sujet_final.upper()} FRAPPE. FORT."
-Case2: Carney Golden pupitre drapeau
-BULLE CARNEY: "{sujet_final.upper()} + CHAUD = EXTRÊMES!"
-BULLE NARRATEUR: "Ottawa s'inquiète."
-Case3: Husky Kahnawake 40°C thermomètre sueur
-BULLE HUSKY: "40°C! ON CUIT ICITTE!"
-BULLE NARRATEUR: "Chantier = fournaise."
-Case4: Ian Lafreniere Golden Sécurité Québec loi
-BULLE IAN: "LOI 5000$! ON SÉVIT!"
-BULLE NARRATEUR: "Québec sévit."
-Case5: Sylvia Jones Caniche santé hôpital
-BULLE SYLVIA: "HYDRATEZ! RESTEZ FRAIS!"
-BULLE NARRATEUR: "Hôpitaux débordent."
-Case6: Familles Caniches solidarité bougies drapeaux
-BULLE CANICHE: "ON S'ENTRAIDE! UNITÉ!"
-BULLE NARRATEUR: "Voisins = force."
-Case7: Pompiers FDNY Bergers feux forêt
-BULLE POMPIER: "FEUX PARTOUT! ON TIENT!"
-BULLE NARRATEUR: "Courage. Devoir."
-Case8: Bas-Rouge Beauceron torche face {sujet_final}
-BULLE BAS-ROUGE: "FURIEUX! MAIS ON VEILLE! GRRR!"
-BULLE NARRATEUR: "L'Extrémiste veille."
-Case9: Le Sage + Bas-Rouge dialogue final
-BULLE LE SAGE: "{sujet_final.upper()} PASSE. MÉMOIRE RESTE."
-BULLE BAS-ROUGE: "CHAQUE LOI, UNE HISTOIRE!"
-BULLE NARRATEUR FIN: "UNITÉ & COEUR. PROTÉGER."
-TITRE: L'EXTRÉMISTE & LE SAGE — {date.today()} — {sujet_final.upper()} — {top} — BULLES PUNCHÉES 100% CHIENS
-"""
-        st.code(prompt_final, language="text")
-        st.download_button("📥 Télécharger prompt", prompt_final, file_name=f"prompt_{sujet_final}_{top}.txt")
+=== CASTING LOGIQUE VARIÉ SELON SUJET — NE PAS RÉPÉTER ===
+Analyse "{sujet}" et choisis LOGIQUEMENT 7 intervenants différents + Sage + Bas-Rouge:
+
+- Si sujet = Guerre tarifs → casting logique = Carney (PM Canada) + Ford Bulldog (Ontario Queens Park) + Fedeli Commerce + Husky Kahnawake acier + Familles Caniches prix épicerie + Garde faune? non Douane + Bas-Rouge + Le Sage
+- Si sujet = Bar rayé → casting = Husky Kahnawake pêcheur + Garde faune Bergers + Carney plan gestion + Familles Caniches pêcheurs barque + Ian Lafreniere carte + Bas-Rouge + Le Sage
+- Si sujet = Loi patchs 5000$ Longueuil → casting = Lafreniere Sécurité + Hells Angels Rottweilers + Ford + Familles Longueuil + Police + Bas-Rouge + Le Sage
+- Si sujet = Sécheresse/40°C → casting = Husky 40°C + Carney + Sylvia Jones santé + Pompiers FDNY feux + Familles + Bas-Rouge + Le Sage
+- RÈGLE: Jamais les mêmes 9 cases, jamais 3 fois le même narrateur "Ottawa s'inquiète", varie les angles.
+
+=== 9 CASES VARIÉES CARICATURE SENS — STRUCTURE V8 NON RÉPÉTITIVE ===
+
+Case1 — LE CHOC / CONTEXTE — Le Sage découvre la nouvelle
+Visuel: Le Sage Labrador couronne cape arrive sur lieu de {sujet}, yeux doux surpris, décor qui montre {sujet} immédiatement (containers douane OU fleuve bar rayé OU parcs Sépaq OU pancarte Longueuil)
+BULLE LE SAGE (interaction): "QUOI? {mot clé sujet} ENCORE?"
+BULLE NARRATEUR: "2026. {sujet.upper()} FRAPPE. FORT."
+
+Case2 — LE POUVOIR RÉAGIT — Personnage connu #1 transformé en chien selon {sujet}
+Visuel: Si {sujet}=tarifs → Carney Golden pupitre Ottawa drapeau + graphique tarifs. Si bar rayé → Husky filet. Si loi → Lafreniere. etc. Chien en action, pas statique.
+BULLE PERSO CONNU (8 mots max sens réel {sujet}): ex: "TARIFS 25%! ON RIPOSTE!" ou "BAR RAYÉ PROTÉGÉ! PLAN 2026!" ou "PATCHS INTERDITS! 5000$!"
+BULLE NARRATEUR (varié, pas toujours Ottawa): "Ottawa riposte." / "Plan 2026." / "Québec sévit."
+
+Case3 — LE TERRAIN / CONSÉQUENCE — Personnage connu #2 terrain
+Visuel: Husky Kahnawake chantier acier bloqué OU pêcheurs Caniches barque qui remettent bar OU ouvrier 40°C sueur. Montre conséquence concrète de {sujet}.
+BULLE HUSKY / CANICHE (8 mots sens): "ACIER BLOQUÉ! ON CUIT!" / "ON REMET! ON PROTÈGE!" / "40°C! ON CUIT ICITTE!"
+BULLE NARRATEUR varié: "Chantier = fournaise." / "Capture = remise." / "Prix montent."
+
+Case4 — L'EXTREMISTE ENTRE EN SCÈNE — Bas-Rouge interagit direct avec {sujet}
+Visuel: Bas-Rouge Beauceron torche casque aile face à {sujet} personnifié en monstre (containers USA en feu OU banc bar rayé géant OU pancarte patchs). Il n'attend pas case 8, il attaque tôt.
+BULLE BAS-ROUGE colère respectueuse: "C'EST QUOI ÇA? GRRR!"
+BULLE NARRATEUR: "L'Extrémiste débarque."
+
+Case5 — LE SAGE TEMPÈRE — Dialogue Sage + intervenant
+Visuel: Le Sage + personnage connu #3 (ex: Ford Bulldog avec plan
