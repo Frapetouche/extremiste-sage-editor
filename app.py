@@ -1,66 +1,48 @@
-import streamlit as st, json, os
-from datetime import date
+import streamlit as st, json, urllib.parse
 
-# --- BIBLE VIVANTE PERSISTANTE ---
-BIBLE_FILE = "bible_vivante.json"
+st.set_page_config(page_title="L'Extremiste & Le Sage - BD", layout="wide")
+st.title("L'EXTREMISTE & LE SAGE — Generateur BD 9 cases — Gratuit")
 
-def load_bible():
-    if os.path.exists(BIBLE_FILE):
-        with open(BIBLE_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    return {
-        "Le Sage": "Labrador noir couronne or cape beige sage yeux doux",
-        "Bas-Rouge": "Beauceron noir et feu casque ailé viking torche foulard rouge yeux rouges furieux mais respectueux en hommage",
-        "Mark Carney": "Golden Retriever premier ministre Canada cravate rouge drapeau Canada",
-        "Monteur acier Kahnawake": "Husky casque chantier mohawk APTN",
-        "Pompiers FDNY": "Bergers allemands casques FDNY courage",
-        "Familles victimes": "Caniches blanc/beige/noir/marron bougies"
-    }
+with open("bible_vivante.json", "r", encoding="utf-8") as f:
+    bible = json.load(f)
 
-def save_bible(bible):
-    with open(BIBLE_FILE, "w", encoding="utf-8") as f:
-        json.dump(bible, f, ensure_ascii=False, indent=2)
-
-bible = load_bible()
-
-# --- UI STREAMLIT ---
-st.set_page_config(page_title="L'Extrémiste & Le Sage - Éditeur", layout="wide")
-st.title("L'EXTRÉMISTE & LE SAGE — Éditeur Bible Vivante — Version Épurée")
-
-# Sidebar = bible vivante qui s'agrandit
 with st.sidebar:
-    st.header("📖 Bible Vivante - Persos créés")
-    st.write("Toujours ajouter à la bible vivante")
-    for nom, desc in bible.items():
-        st.text(f"{nom}: {desc}")
-    
-    new_nom = st.text_input("Ajouter nouveau perso")
-    new_desc = st.text_input("Description chien 4 pattes")
-    if st.button("Ajouter à bible"):
+    st.header("📖 Bible Vivante")
+    st.write(f"{len(bible)} persos")
+    for k,v in bible.items():
+        st.caption(f"**{k}**")
+    new_nom = st.text_input("Nouveau perso")
+    new_desc = st.text_input("Desc chien 4 pattes")
+    if st.button("Ajouter"):
         bible[new_nom] = new_desc
-        save_bible(bible)
+        with open("bible_vivante.json","w",encoding="utf-8") as fw:
+            json.dump(bible,fw,ensure_ascii=False,indent=2)
         st.rerun()
 
-# Main
-sujet = st.text_input("Sujet du jour (ex: 25e anniversaire 11 sept - 2,977 drones 1 drone=1 vie)")
-top = st.selectbox("TOP", ["TOP1", "TOP2", "TOP3", "TOP4", "TOP5"])
-style = st.radio("Style", ["Version épurée moins de texte (70% moins)", "Version complète"], index=0)
+sujet = st.text_input("Sujet du jour", value="25e anniversaire 11 sept 2026 - 2,977 drones 1 drone=1 vie tours avec drones echelle reelle + coeur")
+top = st.selectbox("TOP", ["TOP1","TOP2","TOP3","TOP4","TOP5"])
 
-if st.button("GÉNÉRER PROMPT FINAL POUR IMAGE"):
-    prompt_final = f"""
-L'EXTRÉMISTE & LE SAGE — NEWS DU JOUR {top} {date.today()} — {sujet}
-9 cases 3x3 version épurée bible vivante 100% CHIENS À 4 PATTES AUCUN HUMAIN
-TOUS CHIENS UNIQUES — BIBLE VIVANTE: {json.dumps(bible, ensure_ascii=False)}
-STYLE: version épurée max 12 mots par case gros texte bold lisible parchemin Uderzo
-CONSIGNES: sans répétition chaque chien unique 4 pattes casque ailé viking torche toujours Bas-Rouge
-Case1: {sujet} 1 drone=1 vie si drone show 2,977 Lights Over New York Harbor
-Case8: Bas-Rouge furieux ou respectueux selon hommage
-Case9: Le Sage Labrador noir couronne + Bas-Rouge Beauceron dialogue mémoire prudence unité = solution
-TITRE: L'EXTRÉMISTE & LE SAGE — {date.today()} — {sujet} — {top} — VERSION ÉPURÉE BIBLE VIVANTE 100% CHIENS VIVE MÉMOIRE!
+if st.button("🎨 GENERER PROMPT BD"):
+    prompt_bd = f"""L'EXTRÉMISTE & LE SAGE — NEWS {top} — {sujet} — VERSION EPUREE BIBLE VIVANTE 100% CHIENS 4 PATTES 3x3
+BIBLE: {json.dumps(bible, ensure_ascii=False)}
+9 cases parchemin epure gros texte bold lisible Uderzo max 12 mots case:
+1: 9 SEPT 2026 2,977 Lights NY Harbor 1 drone=1 vie tours echelle reelle faites drones helice Statue Liberte
+2: Carney Golden declaration Il y a 25 ans matin clair journee sombre
+3: Husky Kahnawake APTN monteur acier temoigne 25e
+4: Hommage drones coeur + tours drones 2,977 drones=2,977 vies chaque lumiere une vie art transmet memoire Brenda Berkman
+5-6: Ceremonie drapeaux USA Canada bougies coquelicots devoir memoire unite
+8: Bas-Rouge Beauceron casque aile torche memoire respectueux On n'oublie jamais 2,977 vies chaque lumiere histoire famille
+9: Le Sage Labrador noir couronne + Bas-Rouge dialogue memoire vivante transmission unite=force proteger memoire
+Titre L'EXTRÉMISTE & LE SAGE — {sujet} — {top} — VIVE MEMOIRE!
+Aucun humain tous chiens uniques 4 pattes
 """
-    st.code(prompt_final, language="text")
-    st.download_button("Télécharger prompt", prompt_final, file_name="prompt_final.txt")
-
-# Tableau persos disponibles pour prochaine fois
-st.subheader("Tableau persos disponibles pour prochaine fois")
-st.json(bible)
+    st.subheader("Prompt final prêt")
+    st.code(prompt_bd, language="text")
+    
+    # Bouton pour copier et venir generer ici
+    encoded = urllib.parse.quote(prompt_bd[:500])
+    st.success("✅ Copie le prompt ci-dessus et colle-le ici dans Meta AI — je te genere la BD 9 cases instant!")
+    st.download_button("📥 Telecharger prompt", prompt_bd, file_name="prompt_bd.txt")
+    
+    st.divider()
+    st.info("Workflow gratuit: 1) Tu gardes ta bible dans l'app 2) Tu generes prompt 3) Tu colles ici → je te sors la BD")
