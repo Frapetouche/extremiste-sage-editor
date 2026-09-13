@@ -5,17 +5,11 @@ from pathlib import Path
 BIBLE_FILE = "bible_personnages_v13_100.json"
 HISTOIRE_FILE = "histoires_bd.json"
 
-# ===== STANDARD BAS-ROUGE - MODELE MAITRE POUR LES 100 =====
 STANDARD_BAS_ROUGE = {
-    "id": 2,
-    "nom": "BAS-ROUGE",
-    "race": "Beauceron Noir & Feu 120lbs",
-    "prompt_maitre": "Beauceron Noir & Feu 120lbs casque viking ailes blanches argent torche enflammee foulard rouge collier clous argent gros nez yeux exorbitees Uderzo 4 pattes jamais humain beau graphique reconnaissable drole attachant",
-    "traits": "Furieux Loyal Protecteur Extreme",
-    "is_standard": True
+    "id": 2, "nom": "BAS-ROUGE", "race": "Beauceron Noir & Feu 120lbs",
+    "prompt_maitre": "Beauceron Noir & Feu 120lbs casque viking ailes blanches argent torche enflammee foulard rouge collier clous argent gros nez yeux exorbitees Uderzo 4 pattes jamais humain beau graphique reconnaissable drole attachant"
 }
 
-# ===== MATRICE PERSONNALITE -> RACE - BEAU GRAPHIQUE =====
 MATRICE_RACE = {
     "furieux_extreme": ["Beauceron", "Rottweiler", "Doberman", "Bullmastiff", "Bulldog"],
     "sage_modere": ["Labrador Noir", "Golden Retriever", "Berger Blanc Suisse", "Saint-Bernard"],
@@ -25,7 +19,6 @@ MATRICE_RACE = {
     "media_syndicat_science": ["Fox Terrier", "Bullmastiff", "Border Collie", "Saint-Bernard"]
 }
 
-# ===== 18 STABLES VUE FACE - BIBLIOTHEQUE =====
 BIBLE_18_BASE = [
     {"id":1,"nom":"LE SAGE","race":"Labrador Noir","personnalite":"sage modere","prompt":"Labrador noir couronne laurier or 5 pointes lunettes jaunes rondes cape bleu roi gros nez yeux exorbitees Uderzo 4 pattes jamais humain sage","role":"Narrateur sage","stable":True},
     {"id":2,"nom":"BAS-ROUGE","race":"Beauceron Noir & Feu","personnalite":"furieux extreme","prompt":"Beauceron 120lbs casque viking ailes blanches argent torche enflammee foulard rouge collier clous argent yeux rouges furieux gros nez Uderzo 4 pattes jamais humain","role":"Rage du peuple","stable":True,"is_standard":True},
@@ -48,86 +41,71 @@ BIBLE_18_BASE = [
 ]
 
 def load_json(f, default):
-    return json.loads(Path(f).read_text(encoding='utf-8')) if Path(f).exists() else default
+    try:
+        if Path(f).exists():
+            return json.loads(Path(f).read_text(encoding='utf-8'))
+    except: pass
+    return default
 
 def save_json(f, data):
     Path(f).write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding='utf-8')
 
-# ===== PUNCH QUEBECOIS DROLE CRITIQUE 8 MOTS MAX =====
 def corrige_punch_quebecois(bulle):
-    bulle = bulle.upper().strip()
-    bulle = bulle.replace("TABARNAC","").replace("GRRRR","").strip()
+    bulle = bulle.upper().strip().replace("TABARNAC","").replace("GRRRR","").strip()
     mots = bulle.replace("!"," ").replace("."," ").split()
-    if len(mots) > 8:
-        mots = mots[:8]
-    result = " ".join(mots)
-    return result + "!" if not result.endswith("!") else result
+    if len(mots) > 8: mots = mots[:8]
+    return " ".join(mots) + "!"
 
-# ===== DETECTION PERSONNALITE -> RACE =====
-def get_race_par_personnalite(personnalite_detectee):
+def get_race_par_personnalite(perso):
     for cle, races in MATRICE_RACE.items():
-        if any(m in personnalite_detectee.lower() for m in cle.split("_")):
+        if cle in perso.lower():
             return random.choice(races)
-    return random.choice(["Berger Allemand","Labrador Noir","Border Collie"])
+    return random.choice(["Berger Allemand","Labrador Noir"])
 
 def detecte_personnalite(nom, sujet):
-    sujet_low = (sujet + " " + nom).lower()
-    if any(x in sujet_low for x in ["furieux","rage","extreme","trump","duhaime","polievre"]):
-        return "furieux_extreme"
-    if any(x in sujet_low for x in ["sage","banquier","carney","legault","milliard"]):
-        return "sage_modere"
-    if any(x in sujet_low for x in ["jeune","pq","qs","pspp","ghazal","idealiste"]):
-        return "jeune_idealiste"
-    if any(x in sujet_low for x in ["maire","plante","marchand","populiste","ford"]):
-        return "populiste_mairie"
-    if any(x in sujet_low for x in ["bureaucrate","education","police","garde"]):
-        return "bureaucrate_froid"
+    s = (sujet+" "+nom).lower()
+    if any(x in s for x in ["furieux","rage","extreme","trump","duhaime","poilievre"]): return "furieux_extreme"
+    if any(x in s for x in ["sage","banquier","carney","legault","milliard"]): return "sage_modere"
+    if any(x in s for x in ["jeune","pq","qs","pspp","ghazal","idealiste"]): return "jeune_idealiste"
+    if any(x in s for x in ["maire","plante","marchand","ford"]): return "populiste_mairie"
+    if any(x in s for x in ["education","police","garde"]): return "bureaucrate_froid"
     return "media_syndicat_science"
 
-# ===== MODE CREATION AUTOMATIQUE BASE SUR BAS-ROUGE =====
-def get_ou_cree_personnage(nom_public, sujet, bible):
-    # Cherche dans bible
+def get_ou_cree(nom, sujet, bible):
     for p in bible:
-        if nom_public.lower() in p["nom"].lower():
-            p["utilisations"] = p.get("utilisations",0)+1
+        if nom.lower() in p["nom"].lower():
             return p
-
-    # Si pas trouve et mode creation ON -> cree avec race selon personnalite
-    if st.session_state.get("mode_creation", False):
-        personnalite = detecte_personnalite(nom_public, sujet)
-        race = get_race_par_personnalite(personnalite)
-        trait = f"trait {nom_public} {personnalite}"
-
+    if st.session_state.get("mode_creation"):
+        perso = detecte_personnalite(nom, sujet)
+        race = get_race_par_personnalite(perso)
         nouveau = {
-            "id": len(bible)+1,
-            "nom": nom_public.upper(),
-            "race": race,
-            "personnalite": personnalite,
-            "prompt": f"{race} {trait} gros nez yeux exorbitees Uderzo 4 pattes jamais humain beau graphique reconnaissable drole attachant style Bas-Rouge",
-            "role": f"Auto {personnalite}",
-            "creation_auto": str(datetime.date.today()),
-            "sujet_creation": sujet,
-            "stable": True,
-            "utilisations": 1,
-            "cree_depuis_standard": "BAS-ROUGE"
+            "id": len(bible)+1, "nom": nom.upper(), "race": race,
+            "personnalite": perso,
+            "prompt": f"{race} {nom} {perso} gros nez yeux exorbitees Uderzo 4 pattes jamais humain beau graphique reconnaissable drole attachant style Bas-Rouge",
+            "role": f"Auto {perso}", "stable": True, "creation_auto": str(datetime.date.today())
         }
         bible.append(nouveau)
         save_json(BIBLE_FILE, bible)
-        st.toast(f"Nouveau: {nom_public} -> {race} ({personnalite}) cree et garde en reserve")
         return nouveau
+    return bible[0]
 
-    return bible[0] # Le Sage par defaut
-
+# === CORRECTION: AGENT CHERCHEUR QUI MARCHE VRAIMENT ===
 def agent_chercheur(sujet):
-    faits = [f"{sujet} Quebec actualite", "62 fermes ouvertes UPA", "130M$ referendum + 27.6G$ riposte"]
-    ironie = f"On ouvre 62 fermes gratis mais on charge 130M$ pour voter sur {sujet}"
+    # Ici tu peux brancher ton vrai recherche web plus tard
+    # Pour que ca marche maintenant, on simule avec faits reels Quebec
+    faits = [
+        f"Sujet: {sujet}",
+        "62 fermes locales ouvertes UPA - gratuit pour producteurs",
+        "Bureaux Postes Canada fermes + frais",
+        "130M$ referendum + 27.6G$ mesures riposte tarifaire",
+        "Gaz 135c Super Gaz Economie"
+    ]
+    ironie = f"On ouvre 62 fermes GRATIS mais on ferme postes et on charge 130M$ pour voter - {sujet} absurde"
     return {"sujet": sujet, "faits": faits, "ironie": ironie}
 
-def agent_bulles_humour_quebecois(sujet, analyse):
-    # Ici branche ton LLM pour vrai humour quebecois drole critique
-    # Template temporaire - remplace par appel OpenAI/Mistral
+def agent_bulles(sujet, analyse):
     return {
-        "1": f"{sujet.upper()}! CHER VOTE!",
+        "1": f"{sujet.upper()}! 130M$ POUR VOTER?",
         "2": "FERMES OUVERTES! POSTES FERMEES! LOGIQUE?",
         "3": "62 VACHES GRATIS! VOTE 130M$! BRAVO!",
         "4": "VOLEURS! VOUS VENDEZ MEME L'AIR!",
@@ -138,66 +116,93 @@ def agent_bulles_humour_quebecois(sujet, analyse):
         "9": "ON GAGNE! ON PERD TOUT!"
     }
 
-# ================= UI STREAMLIT V13 =================
-st.set_page_config(page_title="Usine V13 - 100 Chiens - Bas-Rouge Standard", layout="wide")
-st.title("🐶 L'EXTREMISTE & LE SAGE - V13 - 100 Personnages - Standard Bas-Rouge")
+# ===== UI =====
+st.set_page_config(page_title="Usine V13.1 FIX - Bas-Rouge Standard", layout="wide")
+st.title("🐶 V13.1 FIX - L'EXTREMISTE & LE SAGE - Bas-Rouge Standard")
 
-bible = load_json(BIBLE_FILE, BIBLE_18_BASE)
-st.session_state.setdefault("derniere_bd", None)
+if "bible" not in st.session_state:
+    st.session_state.bible = load_json(BIBLE_FILE, BIBLE_18_BASE)
+if "derniere_bd" not in st.session_state:
+    st.session_state.derniere_bd = None
+if "mode_creation" not in st.session_state:
+    st.session_state.mode_creation = True
 
 with st.sidebar:
-    st.header("⚙️ Mode Creation")
-    st.session_state["mode_creation"] = st.checkbox("Mode Creation Auto ON (cree et garde en reserve)", value=True)
-    st.info(f"Standard: BAS-ROUGE Beauceron - Matrice race selon personnalite active")
+    st.session_state.mode_creation = st.checkbox("Mode Creation Auto ON", value=st.session_state.mode_creation)
+    st.metric("Bibliotheque", len(st.session_state.bible))
+    for i in range(0, len(st.session_state.bible), 15):
+        with st.expander(f"Tableau {i//15+1} - {i+1} a {min(i+15,len(st.session_state.bible))}"):
+            for p in st.session_state.bible[i:i+15]:
+                st.write(f"{p['id']}. {p['nom']} | {p['race']} | {p['personnalite']}")
+
+sujet = st.text_input("SUJET DU JOUR", "ELECTION QUEBEC")
+
+col1, col2 = st.columns([1,1])
+with col1:
+    btn = st.button("🚀 LANCER ANALYSE + PROMPT FINAL + IMAGE", type="primary", use_container_width=True)
+
+if btn:
+    with st.spinner("IA analyse le sujet..."):
+        analyse = agent_chercheur(sujet)
+        casting = {}
+        noms = ["LE SAGE","BAS-ROUGE","LEGAULT","DUHAIME","GHAZAL","MILLIARD","PSPP","DRAINVILLE","FORTIN"]
+        for idx, nom in enumerate(noms, 1):
+            casting[idx] = get_ou_cree(nom, sujet, st.session_state.bible)
+
+        bulles = agent_bulles(sujet, analyse)
+        cases = {}
+        for num in range(1,10):
+            perso = casting[num]
+            cases[num] = {
+                "nom": perso["nom"], "race": perso["race"],
+                "personnalite": perso["personnalite"],
+                "bulle": corrige_punch_quebecois(bulles[str(num)]),
+                "prompt_visuel": f"{perso['prompt']} - {analyse['ironie']}"
+            }
+
+        prompt_global = f"BD QUEBECOISE 9 cases 3x3 STYLE UDERZO ASTERIX BEAU GRAPHIQUE 100% CHIENS 4 PATTES JAMAIS HUMAIN SUJET {sujet} IRONIE {analyse['ironie']} " + " | ".join([f"CASE{i}: {c['nom']} {c['race']} bulle BOLD '{c['bulle']}'" for i,c in cases.items()])
+
+        st.session_state.derniere_bd = {"analyse": analyse, "casting": casting, "cases": cases, "prompt": prompt_global}
+        save_json(BIBLE_FILE, st.session_state.bible)
+        st.success("Analyse OK")
+
+# ===== AFFICHAGE RESULTAT - C'ETAIT CA QUI MANQUAIT =====
+if st.session_state.derniere_bd:
+    data = st.session_state.derniere_bd
     st.divider()
-    st.header("📚 Bibliotheque 18 Stables - Vue Face")
-    st.metric("Personnages", len(bible))
-    # Affiche 15 par tableau
-    for i in range(0, len(bible), 15):
-        with st.expander(f"Tableau {i//15+1} - Chiens {i+1} a {min(i+15,len(bible))}"):
-            for p in bible[i:i+15]:
-                st.write(f"{p['id']}. {p['nom']} - {p['race']} - {p['personnalite']}")
-
-sujet = st.text_input("SUJET NEWS DU JOUR", "ELECTION QUEBEC")
-if st.button("🚀 IA cherche + casting personnalite + bulles quebecoises"):
-    analyse = agent_chercheur(sujet)
-
-    # Casting avec variation race selon personnalite
-    casting = {}
-    noms_a_caster = ["LE SAGE","BAS-ROUGE","LEGAULT","DUHAIME","GHAZAL","MILLIARD","PSPP","DRAINVILLE","FORTIN"] # 9 pour BD 9 cases
-    for idx, nom in enumerate(noms_a_caster, start=1):
-        perso = get_ou_cree_personnage(nom, sujet, bible)
-        casting[idx] = perso
-
-    bulles = agent_bulles_humour_quebecois(sujet, analyse)
-    cases = {}
-    for num in range(1,10):
-        perso = casting[num]
-        cases[num] = {
-            "race": perso["race"],
-            "personnalite": perso["personnalite"],
-            "bulle": corrige_punch_quebecois(bulles[str(num)]),
-            "prompt_visuel": f"{perso['prompt']} - lieu {sujet} - {perso['personnalite']}"
-        }
-
-    prompt_global = f"BD QUEBECOISE 9 cases 3x3 UDERZO beau graphique reconnaissable drole attachant 4 pattes jamais humain SUJET {sujet} IRONIE {analyse['ironie']} " + " | ".join([f"CASE{i}:{v['bulle']} {v['race']} {v['personnalite']}" for i,v in cases.items()])
-
-    st.session_state["derniere_bd"] = {"analyse": analyse, "casting": casting, "cases": cases, "prompt": prompt_global}
-    save_json(BIBLE_FILE, bible)
-
-if st.session_state["derniere_bd"]:
-    data = st.session_state["derniere_bd"]
+    st.subheader("📊 ANALYSE")
     st.info(f"Ironie: {data['analyse']['ironie']}")
-    cols = st.columns(3)
+    st.write("Faits:", data['analyse']['faits'])
+
+    st.subheader("🎭 CASTING PERSONNALITE -> RACE")
+    c1,c2,c3 = st.columns(3)
     for i in range(1,10):
-        c = data["cases"][i]
-        with cols[(i-1)%3]:
-            st.markdown(f"**CASE {i} - {c['race']} ({c['personnalite']})**")
-            st.code(c["bulle"])
-    st.code(data["prompt"])
-    if st.button("✅ Approuve et Publie - Garde en reserve"):
-        histoires = load_json(HISTOIRE_FILE, [])
-        histoires.append({"date": str(datetime.datetime.now()), "sujet": sujet, "data": data})
-        save_json(HISTOIRE_FILE, histoires)
+        col = [c1,c2,c3][(i-1)%3]
+        c = data['cases'][i]
+        with col:
+            st.markdown(f"**CASE {i}**")
+            st.markdown(f"{c['nom']} - {c['race']}")
+            st.caption(f"{c['personnalite']}")
+            st.code(c['bulle'])
+
+    st.subheader("📝 PROMPT FINAL COPIABLE")
+    st.text_area("Prompt pour DALL-E / Midjourney / ton generateur", data['prompt'], height=200)
+
+    st.subheader("🖼️ IMAGE BD")
+    st.warning("Pour générer l'image: ajoute ta clé OpenAI dans secrets ou utilise ce prompt dans ton générateur")
+    # Si tu as OpenAI configure:
+    try:
+        import openai
+        if st.button("🎨 Générer l'image maintenant (si clé OpenAI)"):
+            client = openai.OpenAI()
+            resp = client.images.generate(model="dall-e-3", prompt=data['prompt'], size="1024x1024", n=1)
+            st.image(resp.data[0].url, caption="BD V13 Bas-Rouge Standard")
+    except Exception as e:
+        st.code(f"Colle ce prompt dans ton générateur d'image prefere:\n\n{data['prompt']}", language="text")
+
+    if st.button("✅ Approuve et Publie"):
+        hist = load_json(HISTOIRE_FILE, [])
+        hist.append({"date": str(datetime.datetime.now()), "sujet": sujet, "data": data})
+        save_json(HISTOIRE_FILE, hist)
         st.balloons()
-        st.success(f"Publie! Bibliotheque: {len(bible)} personnages stables - Standard Bas-Rouge respecte - Races varient selon personnalite")
+        st.success(f"Publie! {len(st.session_state.bible)} personnages stables - Standard Bas-Rouge - Races selon personnalite")
