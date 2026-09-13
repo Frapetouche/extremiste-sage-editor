@@ -1,17 +1,28 @@
 {
-  "Le Sage": "Labrador noir couronne or cape beige sage yeux doux 4 pattes jamais humain",
-  "Bas-Rouge": "Beauceron noir et feu casque aile viking torche foulard rouge yeux rouges furieux mais respectueux en hommage",
-  "Mark Carney": "Golden Retriever premier ministre Canada cravate rouge drapeau Canada pupitre declaration Il y a 25 ans matin clair journee sombre",
-  "Monteur acier Kahnawake": "Husky mohawk casque chantier gilet orange calepin APTN drapeau Kahnawake temoigne 25e",
-  "Pompiers FDNY": "Bergers allemands casques FDNY tenue pompier courage sacrifice torche memoire regardent ciel",
-  "Familles victimes": "Caniches blanc beige noir marron bougies couronnes fleurs drapeaux USA Canada recueillement",
-  "Doug Ford": "Bulldog anglais Ontario casquette Queens Park guerre tarifs Trump",
-  "Sylvia Jones": "Caniche blanc ministre Sante Ontario",
-  "Vic Fedeli": "Golden ministre Commerce Ontario",
-  "Ian Lafreniere": "Golden ministre Securite Quebec anti-patchs 5000$ Longueuil",
-  "Hells Angels": "Rottweilers Bulldogs cuir patchs Hells Angels motos interdit port couleurs amende 5000$",
-  "Trump": "Bulldog orange cheveux orange guerre tarifs Bombardier interdiction produits canadiens",
-  "Drones Hommage 2977": "Essaim 2,977 lumieres 1 drone=1 vie forment 2 tours jumelles echelle architecturale reelle + coeur geant Sky Elements Drone Shows 9 sept 2026 New York Harbor",
-  "Tribute in Light": "2 faisceaux lumiere NY fond hommage drone nuit",
-  "Ceremonie USA Canada": "Drapeaux USA Canada couronnes coquelicots bougies hommage victimes service national unite"
+  "version": "V13 - 100 Personnages - Standard Bas-Rouge",
+  "standard_creation": {
+    "id_standard": 2,
+    "nom": "BAS-ROUGE",
+    "race": "Beauceron Noir & Feu 120lbs",
+    "prompt_maitre": "Beauceron Noir & Feu casque viking ailes blanches argent torche enflammee foulard rouge collier clous argent gros nez yeux exorbitees Uderzo 4 pattes jamais humain beau graphique reconnaissable drole attachant",
+    "regles": "gros nez + yeux exorbitees + 4 pattes jamais humain + Uderzo + beau graphique obligatoire pour tous les 100"
+  },
+  "matrice_personnalite_race": {
+    "furieux_extreme": ["Beauceron", "Rottweiler", "Doberman"],
+    "sage_modere": ["Labrador Noir", "Golden Retriever", "Berger Blanc Suisse"],
+    "jeune_idealiste": ["Husky", "Saluki", "Caniche Royal"],
+    "populiste_mairie": ["Cocker", "Beagle", "Bulldog", "Corgi"],
+    "bureaucrate": ["Berger Allemand", "Doberman"],
+    "media": ["Fox Terrier", "Bullmastiff", "Border Collie"]
+  },
+  "18_stables": [
+    {"id":1,"nom":"LE SAGE","race":"Labrador Noir","personnalite":"sage modere","prompt":"Labrador noir couronne laurier or lunettes jaunes cape bleu roi gros nez yeux exorbitees Uderzo 4 pattes jamais humain","stable":true},
+    {"id":2,"nom":"BAS-ROUGE","race":"Beauceron Noir & Feu","personnalite":"furieux extreme","prompt":"Beauceron 120lbs casque viking ailes argent torche foulard rouge collier clous yeux rouges furieux gros nez Uderzo 4 pattes jamais humain","stable":true,"is_standard":true},
+    {"id":3,"nom":"LEGAULT","race":"Berger Blanc Suisse","personnalite":"sage fatigue","prompt":"Berger Blanc Suisse tuque CAQ bleu lunettes carrees gros nez Uderzo 4 pattes jamais humain","stable":true},
+    {"id":4,"nom":"DUHAIME","race":"Beagle","personnalite":"furieux populiste","prompt":"Beagle t-shirt PCQ bleu chainsaw lunettes gros nez Uderzo 4 pattes jamais humain","stable":true},
+    {"id":7,"nom":"PSPP","race":"Husky","personnalite":"jeune idealiste independantiste","prompt":"Husky gris blanc veston bleu cravate fleurdelisee PQ gros nez Uderzo 4 pattes jamais humain","stable":true},
+    {"id":10,"nom":"TRUMP","race":"Bulldog","personnalite":"furieux showman","prompt":"Bulldog orange casquette MAGA rouge veston bleu gros nez Uderzo 4 pattes jamais humain","stable":true},
+    {"id":12,"nom":"MARK CARNEY","race":"Golden Retriever","personnalite":"sage banquier","prompt":"Golden complet gris lunettes rondes piece dollar or gros nez Uderzo 4 pattes jamais humain","stable":true}
+  ],
+  "auto_creation_82_restants": "Quand nouvelle news -> IA detecte personnalite -> choisit race dans matrice -> cree prompt style Bas-Rouge -> sauvegarde stable=true pour prochaine publication"
 }
