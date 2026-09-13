@@ -1,129 +1,136 @@
 import streamlit as st
-import random
-import re
-from datetime import datetime
+import json, os, random
+from datetime import date
 
-st.set_page_config(page_title="L'EXTREMISTE & LE SAGE V9.5", layout="wide")
+st.set_page_config(page_title="V9.2.1 FIX", layout="wide")
+st.title("L'EXTREMISTE & LE SAGE - V9.2.1 Fix + Force + Races Aleatoires")
 
-BIBLE = {
-    "LE_SAGE": "Le Sage Labrador noir couronne or yeux sages exorbitees Uderzo 4 pattes jamais humain",
-    "BAS_ROUGE": "Bas-Rouge Beauceron 120lbs casque viking cornes torche flamme yeux furieux Uderzo 4 pattes",
-    "CANICHE_BEIGE": "Caniche Beige economique tuque beige camionnette vieille yeux astucieux Uderzo 4 pattes",
-    "CARNEY": "Golden Carney Labrador blond cravate rouge politicien sage yeux exorbitees Uderzo 4 pattes",
-    "BAR_RAYE": "Berger Allemand garde-peche jumelles uniforme vert yeux vigilants Uderzo 4 pattes"
-}
+BIBLE_FILE="bible_vivante.json"
 
-RACES_25 = [
-    "Samoyede blanc neige fourrure epaisse",
-    "Dalmatien taches noires",
-    "Bouledogue Francais gris costaud",
-    "Border Collie noir blanc intelligent",
-    "Beagle tricolore curieux",
-    "Berger Allemand noir feu",
-    "Labrador Chocolat",
-    "Husky gris yeux bleus",
-    "Corgi courtes pattes",
-    "Shiba Inu roux",
-    "Caniche Royal blanc",
-    "Bouvier Bernois tricolore",
-    "Jack Russell blanc taches",
-    "Teckel allonge saucisse",
-    "Boxer fauve",
-    "Chow Chow langue bleue",
-    "Levier Afghan poil long",
-    "Saint-Bernard enorme",
-    "Chihuahua mini",
-    "Dogue Allemand geant",
-    "Colley poil long Lassie",
-    "Epagneul Cocker oreilles longues",
-    "Terrier Ecossais noir",
-    "Braque Allemand chasse",
-    "Malamute Alaska puissant"
+RACES_POOL = [
+    ("Le Sage Labrador noir couronne or cape beige sage", "triste choque doux sage"),
+    ("Bas-Rouge Beauceron noir feu casque viking torche foulard rouge", "furieux extreme dents torche"),
+    ("Caniche Beige tuque beige camionnette", "content economie heureux"),
+    ("Caniche Blanc poilu conducteur station", "content neutre"),
+    ("Beagle oreilles longues curieux", "curieux etonne"),
+    ("Berger Allemand garde faune jumelles", "surveillance serieux controle"),
+    ("Husky gris blanc thermometre", "choque glace froid"),
+    ("Bulldog orange grognon", "grognon fache"),
+    ("Caniche Noir lunettes caissier", "serieux lunettes"),
+    ("Caniche Brun ouvrier bleu", "heureux travail"),
+    ("Golden Carney cravate rouge PM Canada", "sourire banquier ironique"),
+    ("Labrador Brun triste fleuve", "triste doux"),
+    ("Zelensky Terrier ukrainien treillis", "courageux"),
+    ("Rottweiler noir feu dents sorties", "furieux extreme"),
 ]
 
-def ia_analyse_experte(sujet):
-    s = sujet.lower()
-    is_gaz = any(w in s for w in ["gaz", "essence", "201.6", "saguenay"])
-    is_carney = any(w in s for w in ["carney", "trump", "tarif"])
-    is_bar = any(w in s for w in ["bar raye", "peche", "poisson"])
-    
-    if is_gaz:
-        faits = [
-            "MOYENNE 201.6 CENTS SAGUENAY RECORD",
-            "ECART 17 CENTS 187.9 A 204.9 MEME GAZ",
-            "SUPER GAZ 187.9 MOINS 13.7 ECONOMIE 6.85 SUR 50L",
-            "DIMANCHE MOINS 1.7 ASTUCE CANICHE",
-            "TAXE 10C RETOUR 8 SEPT PLUS 2.4M IRONIE"
-        ]
-        emotion = "frustration + espoir Super Gaz + ironie"
-        forces = ["LE_SAGE", "BAS_ROUGE", "CANICHE_BEIGE"]
-        punch = ["201.6 TABARNAC VOLEURS", "187.9 LOIN 30KM GRRR", "DIMANCHE MOINS 1.7 MAIS JOB", "TAXE 10C 8 SEPT OUCH", "2.4M ALLEGEMENT GAZ 201.6"]
-    elif is_carney:
-        faits = ["CARNEY RENCONTRE TRUMP TARIFS 25P POURCENT", "CARNEY SAGE VS TRUMP FOU IRONIE", "2.4M ALLEGEMENT MAIS GAZ 201.6"]
-        emotion = "inquietude + ironie politique"
-        forces = ["LE_SAGE", "BAS_ROUGE", "CARNEY"]
-        punch = ["CARNEY SAGE TRUMP FOU", "25P POURCENT TABARNAC PEUR", "2.4M OU CA"]
-    elif is_bar:
-        faits = ["BAR RAYE TAILLE 50 A 65CM CONFUSION", "AMENDE 500 DOLLARS SI TROP PETIT", "RETOUR BAR RAYE JOIE MAIS REGLES"]
-        emotion = "joie retour + frustration regles"
-        forces = ["LE_SAGE", "BAS_ROUGE", "BAR_RAYE"]
-        punch = ["50-65CM CONFUS GRRR", "500 DOLLARS AMENDE OUCH", "BAR RAYE ENFIN"]
+def load_bible():
+    if os.path.exists(BIBLE_FILE):
+        try:
+            return json.load(open(BIBLE_FILE,"r",encoding="utf-8"))
+        except:
+            pass
+    return {
+        "Le Sage": "Labrador noir couronne or cape beige sage 4 pattes jamais humain",
+        "Bas-Rouge": "Beauceron noir feu casque viking torche foulard rouge furieux 4 pattes",
+        "Caniche Beige": "Caniche beige tuque camionnette content economie 4 pattes",
+        "Caniche Blanc": "Caniche blanc conducteur 4 pattes",
+        "Beagle": "Beagle curieux 4 pattes",
+        "Berger Allemand": "Berger allemand garde faune 4 pattes",
+        "Husky": "Husky thermometre 4 pattes",
+        "Bulldog": "Bulldog orange grognon 4 pattes",
+        "Golden Carney": "Golden Retriever cravate rouge 4 pattes",
+    }
+
+bible=load_bible()
+
+CASTING_DICO={
+    "carney":"Golden Carney", "zelensky":"Zelensky",
+    "bar raye":"Berger Allemand", "bal raye":"Berger Allemand",
+    "gaz":"Caniche Beige", "essence":"Caniche Beige"
+}
+
+def fetch_percutant_auto(sujet):
+    s=sujet.lower()
+    if "bar raye" in s or "bal raye" in s:
+        faits=["INTERDICTION TOTALE filet maillant bar raye","REGLEMENTATION 1er mai 2026 remise eau obligatoire","RIMOUSKI MATANE GASPESIE zone interdiction","PECHEURS EN COLERE manifestation quai","GARDE FAUNE controle amende 500$"]
+        decor="FLEUVE SAINT-LAURENT GASPESIE phare quai peche"
+    elif "gaz" in s or "essence" in s:
+        faits=["201.6 cents moyenne Montreal 225 stations","187.9 a 204.9 ecart 17c","+17.8 au-dessus habituel 183.8","Dimanche moins cher -1.7","Super Gaz 187.9 economie 6.85 sur 50L","Taxe 10 cents revient 8 sept 2026","2.4 milliards allegement fiscal 2026"]
+        decor="STATION ESSENCE MONTREAL QUEBEC pompe 201.6"
     else:
-        faits = [f"SUJET {sujet.upper()} ANALYSE", "FAIT 1 EXTRAIT IA", "FAIT 2 IRONIE DETECTEE"]
-        emotion = "analyse"
-        forces = ["LE_SAGE", "BAS_ROUGE"]
-        punch = [f"{sujet[:12].upper()} TABARNAC", "RAGE ESPOIR QUOI"]
-    
-    return {"faits": faits, "emotion": emotion, "forces": forces, "punch": punch, "is_gaz": is_gaz, "is_carney": is_carney, "is_bar": is_bar}
+        faits=[f"{sujet.upper()} ACTION FORTE",f"Lieu reel {sujet} 2026",f"Annonce sur {sujet}"]
+        decor="LIEU REEL "+sujet
+    return faits,decor
 
-def generer_prompt(sujet, analyse):
-    races = RACES_25.copy()
-    random.shuffle(races)
-    casting = []
-    casting.append(f"CASE1: {BIBLE['LE_SAGE']} - LE SAGE TOUJOURS")
-    casting.append(f"CASE4: {BIBLE['BAS_ROUGE']} - BAS-ROUGE TOUJOURS")
-    if analyse["is_gaz"]:
-        casting.append(f"CASE2: {BIBLE['CANICHE_BEIGE']} - FORCE GAZ")
-    if analyse["is_carney"]:
-        casting.append(f"CASE2: {BIBLE['CARNEY']} - FORCE CARNEY")
-    if analyse["is_bar"]:
-        casting.append(f"CASE2: {BIBLE['BAR_RAYE']} - FORCE BAR RAYE")
-    for i in range(6):
-        if races:
-            r = races.pop()
-            n = len(casting) + 1
-            if n == 4:
-                n = 7
-            casting.append(f"CASE{n}: {r} - RACE VARIEE ANTI-DOUBLON UDERZO 4 PATTES")
-    
-    prompt = f"STYLE UDERZO gros nez yeux exorbitees 4 pattes jamais humain 9 cases 3x3 BD quebecoise\n"
-    prompt += f"SUJET: {sujet.upper()}\n"
-    prompt += f"ANALYSE: {analyse['emotion']}\n"
-    prompt += "FAITS:\n"
-    for f in analyse["faits"]:
-        prompt += f"- {f}\n"
-    prompt += "PUNCHLINES:\n"
-    for p in analyse["punch"]:
-        prompt += f"- {p}\n"
-    prompt += "CASTING:\n"
-    for c in casting:
-        prompt += f"{c}\n"
-    prompt += "REGLES: Le Sage Case1 Bas-Rouge Case4 7 races differentes jamais meme race bulles BOLD 8 mots max 4 pattes jamais humain gros nez yeux exorbitees quebequois Saguenay\n"
-    return prompt
+def race_aleatoire(type_case, deja):
+    pool=RACES_POOL[:]
+    random.shuffle(pool)
+    tl=type_case.lower()
+    if "furieux" in tl or "voleurs" in tl:
+        pool=sorted(pool,key=lambda x: 0 if "furieux" in x[1] else 1)
+    elif "economie" in tl or "super gaz" in tl:
+        pool=sorted(pool,key=lambda x: 0 if "content" in x[1] or "heureux" in x[1] else 1)
+    for race,expr in pool:
+        nom=race.split()[0]
+        if nom not in deja[-2:]:
+            return race,expr
+    return random.choice(RACES_POOL)
 
-st.title("L'EXTREMISTE & LE SAGE V9.5 IA EXPERTE - FIX SYNTAX")
+st.subheader("V9.2.1 - Fix + Force + Races Aleatoires")
+sujet=st.text_input("Sujet / nouvelle (tout type)",value="Prix du gaz Saguenay")
 
-sujet = st.text_input("Sujet", "prix du gaz Saguenay 201.6")
+if st.button("GENERER V9.2.1 FORCE + ALEATOIRE"):
+    faits,decor=fetch_percutant_auto(sujet)
+    slow=sujet.lower()
+    persos_forces=[]
+    req=set(["Le Sage","Bas-Rouge"])
+    for mot,perso in CASTING_DICO.items():
+        if mot in slow:
+            persos_forces.append(perso)
+            req.add(perso)
+    persos_forces=list(dict.fromkeys(persos_forces))
 
-if st.button("ANALYSE IA EXPERTE + GENERER PROMPT 9 CASES", type="primary"):
-    analyse = ia_analyse_experte(sujet)
-    st.subheader("ANALYSE IA")
-    st.write(f"Emotion: {analyse['emotion']}")
-    st.write(f"Forces: {', '.join(analyse['forces'])}")
-    for f in analyse["faits"]:
-        st.write(f"- {f}")
-    for p in analyse["punch"]:
-        st.write(f"- {p}")
-    final = generer_prompt(sujet, analyse)
-    st.code(final, language="text")
-    st.success("V9.5 FIX - plus de SyntaxError - banque 25 races + Le Sage + Bas-Rouge OK")
+    for p in req:
+        if p not in bible:
+            bible[p]=f"{p} chien 4 pattes auto {sujet} 4 pattes"
+
+    bible_filtree={k:bible[k] for k in req if k in bible}
+    bible_json=json.dumps(bible_filtree,ensure_ascii=False)
+    faits_str=" | ".join(faits)
+
+    cases=[]
+    deja=[]
+    force_map={1:"Le Sage",2:persos_forces[0] if persos_forces else "Golden Carney",4:"Bas-Rouge",5:"Berger Allemand"}
+    types_cases=["cher choque 201.6 TABARNAC","annonce officielle pupitre","ecart curieux 187.9 204.9","furieux voleurs GRRR torche","surveillance dimanche moins cher","economie Super Gaz 187.9 content","taxe grognon 10 cents","2.4 milliards allegement","finale multi races"]
+
+    for i in range(1,10):
+        t=types_cases[i-1]
+        if i in force_map:
+            nom_force=force_map[i]
+            race_full=next((r[0] for r in RACES_POOL if nom_force.split()[0].lower() in r[0].lower()), nom_force)
+            expr_full=next((r[1] for r in RACES_POOL if nom_force.split()[0].lower() in r[0].lower()), "serieux")
+            cases.append(f"{race_full} expression {expr_full} FORCE {t} dans {decor} -- 4 pattes")
+            deja.append(nom_force.split()[0])
+        else:
+            race,expr=race_aleatoire(t,deja)
+            deja.append(race.split()[0])
+            cases.append(f"{race} expression {expr} ALEATOIRE {t} dans {decor} -- 4 pattes")
+
+    p=""
+    p+=f"L'EXTREMISTE & LE SAGE -- {date.today()} -- {sujet.upper()} -- 100% CHIENS 4 PATTES\n"
+    p+="STYLE: Uderzo caricature quebecoise percutante gros nez yeux exorbites bulles blanches BOLD 8 mots max CHAQUE CHIEN 4 PATTES JAMAIS HUMAIN\n"
+    p+=f"BIBLE CASTING FORCE: {bible_json}\n"
+    p+=f"FAITS PERCUTANTS REELS: {faits_str}\n"
+    p+=f"DECOR DU JOUR: {decor}\n"
+    p+=f"REGLE V9.2.1: Persos {persos_forces} FORCE Case2,5. Le Sage Case1, Bas-Rouge Case4 TOUJOURS. Races variees.\n"
+    p+=f"9 CASES SUR {sujet.upper()}:\n"
+    for i,c in enumerate(cases,1):
+        p+=f"Case{i} {c}\n"
+
+    open(BIBLE_FILE,"w",encoding="utf-8").write(json.dumps(bible,ensure_ascii=False,indent=2))
+    st.code(p,language="text")
+    st.download_button("Telecharger V9.2.1 Fix",p,file_name="prompt_v921_fix.txt")
+    st.success(f"Fix OK: Forces {persos_forces} + Le Sage + Bas-Rouge | decor {decor}")
+
+st.caption("V9.2.1 FIX - SyntaxError corrige - Le Sage + Bas-Rouge toujours presents + detection Carney/Bar raye/Gaz auto")
